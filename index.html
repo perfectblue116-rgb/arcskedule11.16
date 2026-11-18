@@ -59,6 +59,30 @@
   .presetline label{flex-direction:row;align-items:center;gap:4px;}
   .presetline label input{width:56px;}
   .autobtn{padding:2px 6px;font-size:11px;white-space:nowrap;}
+  /* ===== 表示オプション（土日色分け・日付縦線の表示/非表示） ===== */
+  table.nowk td.sat,table.nowk td.sun{background:transparent;}
+  table.nowk thead th.daycol.sat,table.nowk thead th.daycol.sun{background:#fff;color:inherit;}
+  table.novl td.daycol,table.novl th.daycol{border-left:none;border-right:none;}
+  table.vlm10 td.daycol{border-left:none;border-right:none;}
+  table.vlm10 td.daycol.meom{border-right:1px solid #8a9099;}
+  table.vlm10 td.daycol.vk{border-left:1px solid #aab0b7;}
+  .optrow{display:flex;flex-direction:column;gap:6px;}
+  .optrow label{flex-direction:row;align-items:center;gap:6px;font-size:12px;cursor:pointer;}
+  /* ===== 工程線の端部ドラッグ（伸縮） ===== */
+  .bar-h{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;z-index:6;touch-action:none;}
+  .bar-h.s{left:0;} .bar-h.e{right:0;}
+  .bar-h:hover{background:rgba(0,0,0,.22);}
+  table.compact .bar-h{width:4px;}
+  #barGhost{position:fixed;z-index:250;height:var(--barh,8px);border-radius:0;opacity:.75;pointer-events:none;outline:2px solid #3d7cc9;}
+  #barGhost .bg-tip{position:absolute;bottom:100%;left:0;margin-bottom:4px;background:#222;color:#fff;font-size:11px;padding:1px 6px;border-radius:4px;white-space:nowrap;}
+  /* ===== 適用項目の追加登録 ===== */
+  .ac-add{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:flex-end;border:1px dashed #6aaa3a;border-radius:8px;padding:6px 10px;background:#f6fbf2;}
+  .ac-add .ttl{width:100%;font-size:12px;font-weight:bold;color:#006400;}
+  .ac-add label{display:flex;flex-direction:column;font-size:11px;gap:2px;color:#333;}
+  .ac-add input[type=text],.ac-add select{font-size:12px;padding:3px 5px;min-width:120px;}
+  .ac-del{margin-left:auto;color:#c95b5b;cursor:pointer;font-size:13px;font-weight:bold;padding-left:6px;}
+  .ac-del:hover{background:#fdeaea;border-radius:3px;}
+  @media print{ .bar-h,#barGhost{display:none!important;} }
   /* ===== 注釈（自由配置の文字ボックス） ===== */
   td.daycol{position:relative;}
   .anno{font-weight:bold;position:absolute;z-index:5;padding:0 3px;line-height:1.1;letter-spacing:-0.03em;white-space:pre-wrap;cursor:move;user-select:none;min-width:14px;inline-size:max-content;max-inline-size:360px;border:1px solid transparent;border-radius:3px;}
@@ -69,6 +93,9 @@
   .anno.v-rl{writing-mode:vertical-rl;padding:3px 0;}
   .anno.sel{outline:2px solid #3d7cc9;outline-offset:1px;}
   .anno.editing{cursor:text;user-select:text;outline:2px solid #e08a2c;}
+  .anno-hd{position:absolute;width:9px;height:9px;background:#fff;border:2px solid #3d7cc9;box-sizing:border-box;z-index:9;touch-action:none;writing-mode:horizontal-tb;}
+  .anno-hd.nw{left:-6px;top:-6px;cursor:nwse-resize;} .anno-hd.se{right:-6px;bottom:-6px;cursor:nwse-resize;}
+  .anno-hd.ne{right:-6px;top:-6px;cursor:nesw-resize;} .anno-hd.sw{left:-6px;bottom:-6px;cursor:nesw-resize;}
   .anno-tools{font-weight:normal;width:max-content;max-inline-size:none;letter-spacing:normal;line-height:1.3;writing-mode:horizontal-tb!important;direction:ltr;text-align:left;flex-direction:row;position:absolute;left:0;bottom:100%;margin-bottom:3px;display:flex;gap:3px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:2px 3px;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:default;white-space:nowrap;font-size:12px;font-weight:normal;color:#000;user-select:none;}
   .anno-tools button,.anno-tools select{writing-mode:horizontal-tb!important;}
   .anno-tools button{padding:1px 6px;font-size:12px;line-height:1.3;}
@@ -142,7 +169,7 @@
   td.sun,th.sun{background:var(--sun);}
   .barcell{height:20px;padding:0;vertical-align:middle;}
   tr.taskrow>td{height:var(--rowh,22px);vertical-align:middle;}
-  .bar{height:7px;margin-top:0;position:relative;}
+  .bar{height:var(--barh,7px);margin-top:0;position:relative;border-radius:0;}
   .dotswrap{height:5px;margin-top:0;position:relative;padding:0;}
   .holidot{width:5px;height:5px;border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%);z-index:1;}
   .holidayrun{padding:0;}
@@ -352,8 +379,18 @@
         <label>注意事項欄 高さ<span class="unitbox"><input type="number" id="eventHeight" min="30" max="500" step="1" placeholder="自動" oninput="applyEventStyle()"><span>px</span><button class="sec autobtn" title="自動に戻す" onclick="document.getElementById('eventHeight').value='';applyEventStyle()">自動</button></span></label>
         <label>注意事項欄 文字<span class="unitbox"><input type="number" id="eventFont" value="12" min="4" max="30" step="1" oninput="applyEventStyle()"><span>px</span></span></label>
         <label>注意事項欄 見出し<span class="unitbox"><input type="number" id="eventLabelFont" value="14" min="8" max="30" step="1" oninput="applyEventStyle()"><span>px</span></span></label>
+        <label>工程線の太さ<span class="unitbox"><input type="number" id="barHeight" value="7" min="2" max="40" step="1" oninput="applyBarH();scheduleSave()"><span>px</span></span></label>
       </div>
       <p class="hint">高さが空欄（自動）ならA3 1ページに収まるよう自動調整。数値を入れるとその高さに固定されます。</p>
+    </section>
+
+    <section class="setcard">
+      <h3>⑤ 表示設定</h3>
+      <div class="optrow">
+        <label><input type="checkbox" id="optWk" checked onchange="applyDispOpts();scheduleSave()">土日・祝日の色分けを表示</label>
+        <label>日付の縦線：<select id="optVl" onchange="applyDispOpts();scheduleSave()"><option value="all">すべての日付に表示</option><option value="m10">月毎と10日・20日のみ表示</option><option value="none">表示しない</option></select></label>
+      </div>
+      <p class="hint">チェックを外すと画面・PDF出力ともに非表示になります。</p>
     </section>
 
   </div>
@@ -364,6 +401,15 @@
   <div class="autobody">
     <p class="hint">【PDFなし】工程表に表示したい項目に☑ → 「☑項目を工程表に反映」ボタンを押すと、工程表に自動で反映されます（☑を外した項目は工程表から外れ、すでに入力済みの日付・色は保持されます）。<br>【PDFあり】図面PDFを下の枠にドロップ（クリックでファイル選択も可）→ 図面から読み取れた項目が自動で☑され、着手順に工程線が描かれます。<br>反映後は、項目欄左端の「⋮⋮」をドラッグして行を入れ替えできます。各項目の開始日・完了日は修正して精査してください。</p>
     <div id="autoChecks" class="ac-grid"></div>
+    <div class="ac-add">
+      <div class="ttl">＋ 適用項目を追加登録（自由に追加できます）</div>
+      <label>大項目<select id="cuGroup" onchange="onCuGroupChange()"></select></label>
+      <label id="cuNewWrap" style="display:none">新しい大項目名<input type="text" id="cuNewGroup" placeholder="例：外部検査"></label>
+      <label id="cuColorWrap" style="display:none">工程線の色<select id="cuColor"><option value="green">緑</option><option value="red">赤</option><option value="blue">青</option><option value="orange">橙</option></select></label>
+      <label>項目名<input type="text" id="cuName" placeholder="例：中間検査" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomItem();}"></label>
+      <button onclick="addCustomItem()" style="font-weight:bold;">追加登録</button>
+      <p class="hint" style="width:100%;margin:0;">追加した項目は☑済みで上の一覧に加わり、保存データにも記録されます。一覧に追加した項目の右端「✕」で削除できます。標準日程では末尾に14日間で配置されるので、日付は後から修正してください。</p>
+    </div>
     <div class="ac-row">
       <label>最初の着手日<input type="date" id="autoBase"></label>
       <label class="ac-chk"><input type="checkbox" id="autoDetect" checked>図面から検出した項目も自動で☑する</label>
@@ -381,7 +427,7 @@
   <div>設計・監理：<span id="tDesigner"></span>　施工：<span id="tBuilder"></span>　作成者：<span id="tAuthor"></span>　承認者：<span id="tApprover"></span></div>
 </div>
 
-<p class="hint no-print" style="margin:0 0 6px;">💡 工程線の左右の端をクリック → 別項目の線の端をクリックで、端部同士を点線で接続します。点線をクリックして選択し「🗑 削除」（または Delete キー）で消せます。<b>工程線の中ほどをクリックすると文字を入力できます</b>（線の端でも Shift＋クリックで入力可）。入力した文字はドラッグで移動、クリックで色・太さ・サイズを変更できます。<span id="linkState"></span></p>
+<p class="hint no-print" style="margin:0 0 6px;">💡 <b>工程線の左右のふち（カーソルが ↔ に変わる部分）をドラッグすると期間を伸縮でき、開始日・完了日も連動して変わります。</b>端のセルをクリック → 別項目の線の端をクリックで、端部同士を点線で接続します。点線をクリックして選択し「🗑 削除」（または Delete キー）で消せます。<b>工程線の中ほどをクリックすると文字を入力できます</b>（線の端でも Shift＋クリックで入力可）。入力した文字はドラッグで移動、クリックで色・太さ・サイズを変更できます。<b>工程表の上をダブルクリックすると注釈を挿入</b>できます（選択すると四隅の■ドラッグで拡大縮小、Ctrl＋C／Ctrl＋Vでコピー＆貼り付け）。<span id="linkState"></span></p>
 <div id="scrollWrap"><table id="ganttTable"></table></div>
 <div class="notesblock" id="notesBlock">
   <div class="nb-label">注意事項<br>懸念事項<br>など</div>
@@ -400,7 +446,7 @@ function toISO(d){
 }
 const PRESETS = [['2週間',14],['3週間',21],['1ヶ月',30],['2ヶ月',60],['3ヶ月',90],['4ヶ月',120],['6ヶ月',183],['8ヶ月',243],['10ヶ月',304],['12ヶ月',365],['14ヶ月',426]];
 // 項目マスタ（大項目 → 小項目）
-const ITEM_MASTER = [
+const BASE_MASTER = [
   ['着手前確認事項',['境界協定(隣地押印等)','盛土','分筆','狭あい','地目変更']],
   ['設計・積算業務',['基本設計','構造設計','基礎構造設計','実施設計','構造見積','工事見積','建築請負契約']],
   ['申請関係',['銀行融資','申請 開発申請','申請 制限解除','申請 東電申請','申請 やさしさ条例','申請 省エネ・建築・消防']],
@@ -408,6 +454,8 @@ const ITEM_MASTER = [
   ['着工後工程',['地盤改良工事','基礎工事','鉄骨工事','外装工事','内装工事','外構工事']],
   ['その他',['地鎮祭','安全祈願祭']]
 ];
+let customItems = [];   // 追加登録された項目 [{g:大項目, n:項目名, c:色(新規大項目のみ)}]
+let ITEM_MASTER = BASE_MASTER.map(([g,a])=>[g,a.slice()]);
 let events = {}; // （旧）行事欄データ。互換のため保持
 let notesText = '';            // 注意事項・懸念事項（自由記述）
 const DEFAULT_SITE_TEXTS = [
@@ -426,7 +474,12 @@ let itemScale = 1;             // 項目欄の文字サイズ倍率（画面・P
 let periodDays = 30;
 let tasks = Array.from({length:20}, ()=>({name:'', start:'', end:'', color:'green'}));
 
+function applyBarH(){
+  const v=Math.min(40,Math.max(2,Number(document.getElementById('barHeight').value)||7));
+  document.documentElement.style.setProperty('--barh', v+'px');
+}
 function applyEventStyle(){
+  applyBarH();
   document.documentElement.style.setProperty('--eventFont', document.getElementById('eventFont').value+'px');
   document.documentElement.style.setProperty('--eventLabelFont', document.getElementById('eventLabelFont').value+'px');
   applyTaskRowH();
@@ -513,9 +566,65 @@ function addAnnotation(){
   let ri=tasks.findIndex(t=>t.name); if(ri<0) ri=0;
   const t=tasks[ri]; if(!t.id) t.id=newTaskId();
   const a={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1000), text:'注釈', rowId:t.id, rowIdx:ri,
-    date:toISO(_cols[Math.min(3,_cols.length-1)]), dx:0.1, dy:0.1, size:10, color:'black', bg:'none', border:true};
+    date:toISO(_cols[Math.min(3,_cols.length-1)]), dx:0.1, dy:0.1, size:13, color:'black', bg:'none', border:false, mode:'h'};
   annotations.push(a); _annoSel=a.id; renderAnnotations(); scheduleSave();
 }
+// ダブルクリックした位置に注釈を挿入し、すぐ文字入力に入る
+function addAnnotationAt(cx,cy){
+  if(!_cols.length) return;
+  const a={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1000), text:'注釈', rowId:'', rowIdx:0, date:'', dx:0, dy:0,
+    size:13, color:'black', bg:'none', border:false, mode:'h'};
+  reanchorAnno(a,cx,cy);
+  if(!a.date) return;
+  annotations.push(a); _annoSel=a.id; renderAnnotations(); scheduleSave();
+  const el=document.querySelector('.anno[data-id="'+a.id+'"]'); if(el) annoEdit(a,el);
+}
+// 四隅のポイントをドラッグして文字サイズを拡大縮小
+function addAnnoHandles(el,a){
+  ['nw','ne','sw','se'].forEach(p=>{
+    const h=document.createElement('div'); h.className='anno-hd no-print '+p; h.title='ドラッグで拡大縮小';
+    h.addEventListener('pointerdown',e=>annoResizeStart(e,a,el,h));
+    el.appendChild(h);
+  });
+}
+function annoResizeStart(e,a,el,h){
+  if(e.button!==undefined && e.button!==0) return;
+  e.preventDefault(); e.stopPropagation();
+  const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const d0=Math.max(8,Math.hypot(e.clientX-cx,e.clientY-cy)), s0=a.size||13;
+  try{ h.setPointerCapture(e.pointerId); }catch(_){}
+  const mv=ev=>{
+    const d=Math.hypot(ev.clientX-cx,ev.clientY-cy);
+    a.size=Math.round(Math.min(200,Math.max(6,s0*d/d0))*10)/10;
+    el.style.fontSize='calc('+a.size+'px * var(--annoscale,1))';
+  };
+  const up=()=>{
+    h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); h.removeEventListener('pointercancel',up);
+    renderAnnotations(); scheduleSave();
+  };
+  h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up); h.addEventListener('pointercancel',up);
+}
+// Ctrl+C / Ctrl+V：選択中の注釈をコピー＆貼り付け（貼り付けはマウス位置。表の外なら少しずらして）
+let _annoClip=null, _mouse={x:0,y:0};
+document.addEventListener('pointermove',e=>{ _mouse.x=e.clientX; _mouse.y=e.clientY; });
+document.addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey)||e.altKey) return;
+  const ae=document.activeElement;
+  if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'||ae.isContentEditable)) return;
+  const k=(e.key||'').toLowerCase();
+  if(k==='c' && _annoSel){
+    const a=annotations.find(x=>x.id===_annoSel);
+    if(a){ _annoClip=JSON.parse(JSON.stringify(a)); e.preventDefault(); showSaved('📋 注釈をコピーしました（Ctrl+Vで貼り付け）'); }
+  } else if(k==='v' && _annoClip){
+    e.preventDefault();
+    const a=JSON.parse(JSON.stringify(_annoClip));
+    a.id='a'+Date.now().toString(36)+Math.floor(Math.random()*1000);
+    const tb=document.getElementById('ganttTable').getBoundingClientRect();
+    const inside=_mouse.x>=tb.left&&_mouse.x<=tb.right&&_mouse.y>=tb.top&&_mouse.y<=tb.bottom;
+    if(inside) reanchorAnno(a,_mouse.x,_mouse.y); else { a.dx=(a.dx||0)+0.3; a.dy=(a.dy||0)+0.3; }
+    annotations.push(a); _annoSel=a.id; renderAnnotations(); scheduleSave();
+  }
+});
 function renderAnnotations(){
   document.querySelectorAll('#ganttTable .anno').forEach(e=>e.remove());
   const trs=document.querySelectorAll('#ganttTable tr.taskrow');
@@ -539,7 +648,7 @@ function buildAnno(a){
   // 太さ・フォントは直接指定（曜日の見出しと同じ日本語フォント・太字）
   tx.style.fontWeight='700'; tx.style.fontFamily='"Yu Gothic","Hiragino Sans","Meiryo",sans-serif';
   el.appendChild(tx);
-  if(a.id===_annoSel) el.appendChild(buildAnnoTools(a));
+  if(a.id===_annoSel){ el.appendChild(buildAnnoTools(a)); addAnnoHandles(el,a); }
   el.addEventListener('pointerdown', e=>annoDown(e,a,el));
   el.addEventListener('dblclick', e=>annoEdit(a,el));
   return el;
@@ -549,7 +658,7 @@ function buildAnnoTools(a){
   t.addEventListener('pointerdown', e=>e.stopPropagation());
   const mk=(label,fn,title)=>{ const b=document.createElement('button'); b.className='sec'; b.textContent=label; if(title) b.title=title; b.onclick=e=>{e.stopPropagation(); fn();}; t.appendChild(b); };
   mk('A−',()=>{a.size=Math.max(6,a.size-1); renderAnnotations(); scheduleSave();},'文字を小さく');
-  mk('A＋',()=>{a.size=Math.min(48,a.size+1); renderAnnotations(); scheduleSave();},'文字を大きく');
+  mk('A＋',()=>{a.size=Math.min(200,a.size+1); renderAnnotations(); scheduleSave();},'文字を大きく');
   const sel=(opts,cur,fn,title)=>{ const s=document.createElement('select'); s.title=title;
     opts.forEach(([v,l])=>{ const o=document.createElement('option'); o.value=v; o.textContent=l; if(v===cur) o.selected=true; s.appendChild(o); });
     s.onchange=()=>{ fn(s.value); renderAnnotations(); scheduleSave(); }; s.addEventListener('pointerdown',e=>e.stopPropagation()); t.appendChild(s); };
@@ -607,6 +716,7 @@ function annoEdit(a,el){
   const tx=el.querySelector('.anno-text'); if(!tx||el.classList.contains('editing')) return;
   el.classList.add('editing');
   const tools=el.querySelector('.anno-tools'); if(tools) tools.style.display='none';
+  el.querySelectorAll('.anno-hd').forEach(h=>h.remove());
   tx.contentEditable='true'; tx.focus();
   const r=document.createRange(); r.selectNodeContents(tx); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r);
   const done=()=>{
@@ -623,8 +733,8 @@ function annoDown(e,a,el){
   if(e.button!==0||el.classList.contains('editing')) return;
   e.preventDefault(); e.stopPropagation();
   if(_annoSel!==a.id){
-    document.querySelectorAll('#ganttTable .anno.sel').forEach(x=>{ x.classList.remove('sel'); const t=x.querySelector('.anno-tools'); if(t) t.remove(); });
-    _annoSel=a.id; el.classList.add('sel'); el.appendChild(buildAnnoTools(a));
+    document.querySelectorAll('#ganttTable .anno.sel').forEach(x=>{ x.classList.remove('sel'); const t=x.querySelector('.anno-tools'); if(t) t.remove(); x.querySelectorAll('.anno-hd').forEach(h=>h.remove()); });
+    _annoSel=a.id; el.classList.add('sel'); el.appendChild(buildAnnoTools(a)); addAnnoHandles(el,a);
   }
   const sx=e.clientX, sy=e.clientY, sl=el.offsetLeft, st=el.offsetTop; let moved=false;
   el.setPointerCapture(e.pointerId);
@@ -766,7 +876,24 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',place
 
 // ===== 適用項目の選択 → 着手順に自動配置／図面PDFから読み取り =====
 const GROUP_COLOR = {'着手前確認事項':'green','設計・積算業務':'blue','申請関係':'orange','工事':'red','着工後工程':'red','その他':'green'};
-const GROUP_OF = {}; ITEM_MASTER.forEach(([g,items])=>items.forEach(n=>GROUP_OF[n]=g));
+const GROUP_OF = {};
+// 標準項目 ＋ 追加登録項目から ITEM_MASTER / GROUP_OF を作り直す
+function rebuildMaster(){
+  ITEM_MASTER = BASE_MASTER.map(([g,a])=>[g,a.slice()]);
+  customItems.forEach(ci=>{
+    let grp = ITEM_MASTER.find(x=>x[0]===ci.g);
+    if(!grp){ grp=[ci.g,[]]; ITEM_MASTER.push(grp); }
+    if(!grp[1].includes(ci.n)) grp[1].push(ci.n);
+  });
+  Object.keys(GROUP_OF).forEach(k=>delete GROUP_OF[k]);
+  ITEM_MASTER.forEach(([g,items])=>items.forEach(n=>GROUP_OF[n]=g));
+}
+function colorOfItem(n){
+  const ci = customItems.find(x=>x.n===n); if(ci && ci.c) return ci.c;
+  const g = GROUP_OF[n]; if(GROUP_COLOR[g]) return GROUP_COLOR[g];
+  const cg = customItems.find(x=>x.g===g && x.c); return cg ? cg.c : 'green';
+}
+rebuildMaster();
 // 標準工程テンプレート（着手順）。dur=標準日数, off=直前項目の着手からの日数(前提なし時), after=先行項目(完了の翌日から), lag=ずらし日数(負=重複)
 const START_DEPS=['地鎮祭','開発工事','安全祈願祭','申請 省エネ・建築・消防','建築請負契約'];
 const SCHED_SEQ = [
@@ -823,6 +950,7 @@ const DETECT_KW = [
 ];
 function buildAutoChecks(){
   const box=document.getElementById('autoChecks'); if(!box) return;
+  const prev=getAutoChecked();
   box.innerHTML='';
   ITEM_MASTER.forEach(([g,items])=>{
     const d=document.createElement('div'); d.className='ac-group';
@@ -832,9 +960,22 @@ function buildAutoChecks(){
     const all=document.createElement('a'); all.textContent='全選択'; all.onclick=()=>{ d.querySelectorAll('input').forEach(i=>i.checked=true); scheduleSave(); };
     const none=document.createElement('a'); none.textContent='解除'; none.onclick=()=>{ d.querySelectorAll('input').forEach(i=>i.checked=false); scheduleSave(); };
     ops.appendChild(all); ops.appendChild(none); h.appendChild(ops); d.appendChild(h);
-    items.forEach(n=>{ const l=document.createElement('label'); const c=document.createElement('input'); c.type='checkbox'; c.value=n; c.onchange=scheduleSave; l.appendChild(c); l.appendChild(document.createTextNode(n)); d.appendChild(l); });
+    items.forEach(n=>{
+      const l=document.createElement('label'); const c=document.createElement('input'); c.type='checkbox'; c.value=n; c.onchange=scheduleSave;
+      l.appendChild(c); l.appendChild(document.createTextNode(n));
+      if(customItems.some(x=>x.n===n)){
+        const x=document.createElement('span'); x.className='ac-del'; x.textContent='✕'; x.title='この追加項目を一覧から削除';
+        x.onclick=e=>{ e.preventDefault(); e.stopPropagation(); removeCustomItem(n); };
+        l.appendChild(x);
+      }
+      d.appendChild(l);
+    });
     box.appendChild(d);
   });
+  setAutoChecked(prev);
+  fillCustomGroupSelect();
+}
+function initDropZone(){
   const dz=document.getElementById('dropZone'), fi=document.getElementById('pdfInput');
   dz.addEventListener('click',()=>fi.click());
   fi.addEventListener('change',()=>{ if(fi.files.length) handleDroppedPdfs(Array.from(fi.files)); fi.value=''; });
@@ -844,6 +985,48 @@ function buildAutoChecks(){
   // 枠の外にドロップしてもブラウザがPDFを開かないようにする
   window.addEventListener('dragover',e=>e.preventDefault());
   window.addEventListener('drop',e=>e.preventDefault());
+}
+// ===== 適用項目の追加登録 =====
+function fillCustomGroupSelect(){
+  const sel=document.getElementById('cuGroup'); if(!sel) return;
+  const cur=sel.value; sel.innerHTML='';
+  ITEM_MASTER.forEach(([g])=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; sel.appendChild(o); });
+  const o=document.createElement('option'); o.value='__new__'; o.textContent='＋ 新しい大項目を作る'; sel.appendChild(o);
+  if(cur && Array.from(sel.options).some(x=>x.value===cur)) sel.value=cur;
+  onCuGroupChange();
+}
+function onCuGroupChange(){
+  const isNew=document.getElementById('cuGroup').value==='__new__';
+  document.getElementById('cuNewWrap').style.display=isNew?'':'none';
+  document.getElementById('cuColorWrap').style.display=isNew?'':'none';
+}
+function addCustomItem(){
+  const gs=document.getElementById('cuGroup'), nameEl=document.getElementById('cuName');
+  const n=nameEl.value.trim(); let g=gs.value;
+  if(g==='__new__') g=document.getElementById('cuNewGroup').value.trim();
+  if(!n){ autoMsg('追加する項目名を入力してください。','err'); return; }
+  if(!g){ autoMsg('新しい大項目名を入力してください。','err'); return; }
+  if(GROUP_OF[n]){ autoMsg('「'+n+'」はすでに登録されています（大項目：'+GROUP_OF[n]+'）。','err'); return; }
+  const isNewGroup=!ITEM_MASTER.some(x=>x[0]===g);
+  let c=null;
+  if(isNewGroup) c=document.getElementById('cuColor').value;
+  else if(!GROUP_COLOR[g]){ const ex=customItems.find(x=>x.g===g&&x.c); c=ex?ex.c:'green'; }
+  customItems.push({g,n,c});
+  const checked=getAutoChecked(); checked.push(n);
+  rebuildMaster(); buildAutoChecks(); setAutoChecked(checked);
+  nameEl.value=''; document.getElementById('cuNewGroup').value='';
+  document.getElementById('cuGroup').value=g; onCuGroupChange();
+  autoMsg('✔ 「'+n+'」を追加登録しました（大項目：'+g+'）。☑済みです。「☑項目を工程表に反映」で工程表に入ります。','ok');
+  scheduleSave();
+}
+function removeCustomItem(n){
+  if(!confirm('追加項目「'+n+'」を一覧から削除します。\n（工程表に同名の行があれば、その行も削除されます）\nよろしいですか？')) return;
+  const checked=getAutoChecked().filter(x=>x!==n);
+  customItems=customItems.filter(x=>x.n!==n);
+  tasks.filter(t=>t.name===n).forEach(t=>{ if(t.id) links=links.filter(l=>l.a!==t.id&&l.b!==t.id); });
+  tasks=tasks.filter(t=>t.name!==n);
+  while(tasks.length<20) tasks.push({name:'',start:'',end:'',color:'green'});
+  rebuildMaster(); buildAutoChecks(); setAutoChecked(checked); render(); scheduleSave();
 }
 function getAutoChecked(){ return Array.from(document.querySelectorAll('#autoChecks input:checked')).map(i=>i.value); }
 function setAutoChecked(arr){ document.querySelectorAll('#autoChecks input').forEach(i=>{ i.checked=arr.includes(i.value); }); }
@@ -919,6 +1102,7 @@ function buildSchedule(info,srcName,opt){
     return 1;
   };
   const sel=SCHED_SEQ.filter(([n])=>checked.includes(n));
+  checked.filter(n=>!SCHED_SEQ.some(x=>x[0]===n)).forEach(n=>sel.push([n,{dur:14,off:7}]));   // 追加登録項目は末尾・14日間
   const sch={}; let prevStart=null;
   sel.forEach(([n,r])=>{
     const dur=Math.max(1,Math.round(r.dur*factor(r.kind)));
@@ -934,7 +1118,7 @@ function buildSchedule(info,srcName,opt){
   const addDays=(n)=>{ const d=new Date(base); d.setDate(d.getDate()+n); return toISO(d); };
   const order=n=>SCHED_SEQ.findIndex(x=>x[0]===n);
   const list=sel.map(([n])=>n).sort((a,b)=>sch[a].start-sch[b].start||order(a)-order(b))
-    .map(n=>({id:newTaskId(),name:n,start:nodate?'':addDays(sch[n].start),end:nodate?'':addDays(sch[n].end),color:GROUP_COLOR[GROUP_OF[n]]||'green'}));
+    .map(n=>({id:newTaskId(),name:n,start:nodate?'':addDays(sch[n].start),end:nodate?'':addDays(sch[n].end),color:colorOfItem(n)}));
   let added=0, removed=0;
   if(keep){
     // 既存の行（日付・色・並び順）は保持し、☑を外した標準項目は外し、新しく☑した項目だけ末尾に追加
@@ -1051,6 +1235,15 @@ function isJapanesePublicHoliday(date){
   return getJapaneseHolidays(date.getFullYear()).has(toISO(date));
 
 }
+// 土日祝の色分け／日付の縦線 の表示・非表示
+function applyDispOpts(){
+  const wk=document.getElementById('optWk'), vl=document.getElementById('optVl');
+  const t=document.getElementById('ganttTable'); if(!t) return;
+  t.classList.toggle('nowk', !(wk && wk.checked));
+  const vm = vl ? vl.value : 'all';
+  t.classList.toggle('novl', vm==='none');
+  t.classList.toggle('vlm10', vm==='m10');
+}
 function render(){
   scheduleSave();
   closeLblTools();
@@ -1092,6 +1285,7 @@ function render(){
   const table = document.getElementById('ganttTable');
   table.innerHTML='';
   table.classList.toggle('compact', compact);
+  applyDispOpts();
   table.style.setProperty('--dcw', DCW+'px');
   if(compact){
     const cg = document.createElement('colgroup'); cg.className='scr-colgroup';
@@ -1200,7 +1394,7 @@ function render(){
     const color = t.color || 'green';
     const rowTds = []; dayTds[ri] = rowTds;
     cols.forEach(d=>{
-      const td = document.createElement('td'); td.className='daycol barcell '+dowColorClass(d)+(eom(d)?' meom':'');
+      const td = document.createElement('td'); td.className='daycol barcell '+dowColorClass(d)+(eom(d)?' meom':'')+((d.getDate()===10||d.getDate()===20)?' vk':'');
       rowTds.push(td);
       if(t._ok && d>=t._s && d<=t._e){
         const contLeft = d>t._s, contRight = d<t._e;
@@ -1209,21 +1403,24 @@ function render(){
         bar.style.marginLeft = contLeft ? '-2px' : '0';
         bar.style.marginRight = contRight ? '-2px' : '0';
         bar.style.width = `calc(100% + ${(contLeft?2:0)+(contRight?2:0)}px)`;
-        bar.style.borderTopLeftRadius = bar.style.borderBottomLeftRadius = contLeft ? '0' : '7px';
-        bar.style.borderTopRightRadius = bar.style.borderBottomRightRadius = contRight ? '0' : '7px';
+        bar.style.borderRadius = '0';
         td.appendChild(bar);
         // クリック：線の中ほど＝文字入力／線の端部＝点線の接続（Shift+クリックは端部でも文字入力）
         const isS = d.getTime()===t._s.getTime(), isE = d.getTime()===t._e.getTime();
+        if(isS) td.appendChild(makeBarHandle('s',ri));   // 端部ドラッグ（伸縮）
+        if(isE) td.appendChild(makeBarHandle('e',ri));
         td.classList.add('inbar');
         if(isS || isE){
           td.classList.add('endcell'); td.title='線の端部：クリックで点線を接続／Shift＋クリックで文字入力';
           if(_linkFrom && _linkFrom.id===t.id && ((_linkFrom.end==='s'&&isS)||(_linkFrom.end==='e'&&isE&&!(isS&&_linkFrom.end==='s')))) td.classList.add('linkpend');
         } else td.title='クリックで文字を入力';
         td.addEventListener('click',(e)=>{
+          if(_barDragMoved) return;
           if(e.target.closest('.anno')||e.target.closest('svg.lnk')||e.target.closest('.lnk-del')||e.target.closest('.barlabel-edit')||e.target.closest('.barlabel')) return;
-          if(e.shiftKey || !(isS||isE)){ editBarLabel(t.id,td); return; }
+          if(e.detail>1){ clearTimeout(_barClickTimer); return; }
+          if(e.shiftKey || !(isS||isE)){ clearTimeout(_barClickTimer); _barClickTimer=setTimeout(()=>editBarLabel(t.id,td),250); return; }
           const end = (isS&&isE) ? ((e.clientX-td.getBoundingClientRect().left) < td.getBoundingClientRect().width/2 ? 's' : 'e') : (isS ? 's' : 'e');
-          linkClick(t.id,end);
+          clearTimeout(_barClickTimer); _barClickTimer=setTimeout(()=>linkClick(t.id,end),250);
         });
       }
       tr.appendChild(td);
@@ -1247,6 +1444,75 @@ function render(){
       }
     }
   }
+}
+
+// ===== 工程線の端部をドラッグして期間を伸縮（開始日・完了日の入力欄も連動） =====
+let _barDragMoved=false, _barClickTimer=null;
+function makeBarHandle(which,ri){
+  const h=document.createElement('div'); h.className='bar-h no-print '+which;
+  h.title=(which==='s'?'ドラッグで開始日を変更':'ドラッグで完了日を変更')+'（クリックで点線の接続）';
+  h.addEventListener('pointerdown',e=>startBarResize(e,which,ri,h));
+  return h;
+}
+function startBarResize(e,which,ri,h){
+  if(e.button!==undefined && e.button!==0) return;
+  const t=tasks[ri]; if(!t||!t.start||!t.end) return;
+  e.preventDefault(); e.stopPropagation();
+  const wrap=document.getElementById('scrollWrap');
+  const cellsOf=()=>{ const tr=document.querySelectorAll('#ganttTable tr.taskrow')[ri]; return tr?Array.from(tr.querySelectorAll('td.daycol')):[]; };
+  const idxAt=x=>{ const cs=cellsOf(); for(let i=0;i<cs.length;i++){ if(x<cs[i].getBoundingClientRect().right) return i; } return Math.max(0,cs.length-1); };
+  const fmt=iso=>{ const a=iso.split('-'); return (+a[1])+'/'+(+a[2]); };
+  const dayDiff=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+  const ghost=document.createElement('div'); ghost.id='barGhost'; ghost.className='no-print';
+  ghost.style.background='var(--'+(t.color||'green')+')';
+  const tip=document.createElement('div'); tip.className='bg-tip'; ghost.appendChild(tip);
+  document.body.appendChild(ghost);
+  let ns=t.start, ne=t.end, lastX=e.clientX, moved=false;
+  try{ h.setPointerCapture(e.pointerId); }catch(_){}
+  const draw=()=>{
+    const cs=cellsOf(); if(!cs.length||!_cols.length) return;
+    const clamp=i=>Math.min(Math.max(i,0),cs.length-1);
+    const a=cs[clamp(dayDiff(toISO(_cols[0]),ns))].getBoundingClientRect();
+    const b=cs[clamp(dayDiff(toISO(_cols[0]),ne))].getBoundingClientRect();
+    ghost.style.left=a.left+'px'; ghost.style.width=Math.max(4,b.right-a.left)+'px';
+    ghost.style.top=(a.top+a.height/2-4)+'px';
+    tip.textContent=fmt(ns)+' ～ '+fmt(ne)+'（'+(dayDiff(ns,ne)+1)+'日間）';
+    // 開始日・完了日の入力欄も追従
+    const si=document.querySelector('#ganttTable input[data-ri="'+ri+'"][data-field="start"]');
+    const ei=document.querySelector('#ganttTable input[data-ri="'+ri+'"][data-field="end"]');
+    if(si) si.value=ns; if(ei){ ei.value=ne; ei.classList.remove('bad'); }
+  };
+  const update=()=>{
+    const iso=toISO(_cols[idxAt(lastX)]);
+    if(which==='s'){ ns=(iso>t.end)?t.end:iso; ne=t.end; }       // 開始日は完了日より後にしない
+    else { ne=(iso<t.start)?t.start:iso; ns=t.start; }            // 完了日は開始日より前にしない
+    draw();
+  };
+  const mv=ev=>{
+    lastX=ev.clientX;
+    if(!moved && Math.abs(ev.clientX-e.clientX)<3) return;
+    moved=true; _barDragMoved=true; update();
+  };
+  // 画面端（左は固定列の右端）に近づいたら横スクロール
+  const timer=setInterval(()=>{
+    if(!moved) return;
+    const wr=wrap.getBoundingClientRect(); let dx=0;
+    if(lastX>wr.right-30) dx=14; else if(lastX<wr.left+480) dx=-14;
+    if(dx){ const b0=wrap.scrollLeft; wrap.scrollLeft=b0+dx; if(wrap.scrollLeft!==b0) update(); }
+  },40);
+  const finish=commit=>{
+    clearInterval(timer);
+    h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); h.removeEventListener('pointercancel',cancel);
+    try{ h.releasePointerCapture(e.pointerId); }catch(_){}
+    ghost.remove();
+    if(moved){
+      if(commit){ t.start=ns; t.end=ne; }
+      render();   // 入力欄・点線・文字位置を確定値で再描画
+    }
+    setTimeout(()=>{ _barDragMoved=false; },0);
+  };
+  const up=()=>finish(true), cancel=()=>finish(false);
+  h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up); h.addEventListener('pointercancel',cancel);
 }
 
 // ===== 項目欄の文字サイズ（拡大縮小） =====
@@ -1529,11 +1795,11 @@ document.querySelectorAll('#presets button')[2].classList.add('active');
 
 // ===== 保存（自動保存：ブラウザ内 / ファイル保存・読み込み） =====
 const SAVE_KEY='estate-gantt-state-v2';
-const SAVE_FIELDS=['projName','designer','builder','author','approver','projStart','autoBase','customDays','rowHeight','eventHeight','eventFont','eventLabelFont'];
+const SAVE_FIELDS=['barHeight','projName','designer','builder','author','approver','projStart','autoBase','customDays','rowHeight','eventHeight','eventFont','eventLabelFont'];
 let _saveTimer=null, _noSave=false;
 function collectState(){
   const fields={}; SAVE_FIELDS.forEach(id=>{ const el=document.getElementById(id); if(el) fields[id]=el.value; });
-  return {app:'estate-gantt', version:2, savedAt:new Date().toISOString(), fields, periodDays, tasks, events, annotations, notesText, siteLines, links, autoChecked:getAutoChecked(), itemScale};
+  return {app:'estate-gantt', version:2, savedAt:new Date().toISOString(), fields, periodDays, tasks, events, annotations, notesText, siteLines, links, autoChecked:getAutoChecked(), itemScale, customItems, disp:{wk:document.getElementById('optWk').checked, vl:document.getElementById('optVl').value}};
 }
 function applyState(st){
   Object.entries(st.fields||{}).forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v; });
@@ -1554,6 +1820,9 @@ function applyState(st){
   }
   links=Array.isArray(st.links)?st.links:[]; _linkFrom=null; _linkSel=null;
   syncNotesUI();
+  customItems=Array.isArray(st.customItems)?st.customItems.filter(x=>x&&x.g&&x.n).map(x=>({g:String(x.g),n:String(x.n),c:x.c||null})):[];
+  rebuildMaster(); buildAutoChecks();
+  if(st.disp){ document.getElementById('optWk').checked=(st.disp.wk!==false); { const v=st.disp.vl; document.getElementById('optVl').value=(v===false)?'none':(typeof v==='string'?v:'all'); } }
   if(Array.isArray(st.autoChecked)) setAutoChecked(st.autoChecked);
   itemScale=(typeof st.itemScale==='number')?Math.min(2,Math.max(0.6,st.itemScale)):1;
   annotations=Array.isArray(st.annotations)?st.annotations:[]; _annoSel=null;
@@ -1613,6 +1882,15 @@ function newProject(){
 document.addEventListener('input', scheduleSave);
 document.addEventListener('change', scheduleSave);
 window.addEventListener('beforeunload', ()=>{ clearTimeout(_saveTimer); saveNow(); });
+initDropZone();
+document.getElementById('ganttTable').addEventListener('dblclick',e=>{
+  if(e.button!==0) return;
+  if(e.target.closest('.anno,.barlabel,.barlabel-edit,svg.lnk,.lnk-del,.bar-h,input,select,button')) return;
+  if(!e.target.closest('tbody td.daycol')) return;
+  clearTimeout(_barClickTimer);
+  const sl=getSelection(); if(sl) sl.removeAllRanges();
+  addAnnotationAt(e.clientX,e.clientY);
+});
 buildAutoChecks();
 loadSaved(); // 前回の状態があれば復元
 syncNotesUI();

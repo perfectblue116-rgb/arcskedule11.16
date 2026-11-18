@@ -64,7 +64,6 @@
   table.nowk thead th.daycol.sat,table.nowk thead th.daycol.sun{background:#fff;color:inherit;}
   table.novl td.daycol,table.novl th.daycol{border-left:none;border-right:none;}
   table.vlm10 td.daycol{border-left:none;border-right:none;}
-  table.vlm10 td.daycol.meom{border-right:1px solid #8a9099;}
   table.vlm10 td.daycol.vk{border-left:1px solid #aab0b7;}
   .optrow{display:flex;flex-direction:column;gap:6px;}
   .optrow label{flex-direction:row;align-items:center;gap:6px;font-size:12px;cursor:pointer;}
@@ -207,6 +206,9 @@
   .barlabel.in{background:rgba(255,255,255,.88);padding:0 3px;border-radius:3px;}
   .barlabel-edit{position:absolute;left:0;top:50%;transform:translateY(-50%);width:210px;z-index:30;font-size:12px;padding:2px 5px;border:2px solid #3d7cc9;border-radius:4px;background:#fff;box-sizing:border-box;}
   td.endcell:hover{background-image:linear-gradient(rgba(61,124,201,.16),rgba(61,124,201,.16));}
+  td.pendcell{box-shadow:inset 0 0 0 2px #e08a2c;background-image:linear-gradient(rgba(224,138,44,.35),rgba(224,138,44,.35));}
+  td.pendcell::after{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#e08a2c;border:2px solid #fff;z-index:7;pointer-events:none;}
+  @media print{ td.pendcell{box-shadow:none!important;background-image:none!important;} td.pendcell::after{display:none!important;} }
   td.linkpend{box-shadow:inset 0 0 0 2px #e08a2c;background-image:linear-gradient(rgba(224,138,44,.25),rgba(224,138,44,.25));}
   .lnk-del{position:absolute;z-index:6;transform:translate(-50%,-130%);padding:1px 7px;font-size:11px;white-space:nowrap;background:#fff;color:#c95b5b;border:1px solid #c95b5b;border-radius:4px;cursor:pointer;}
   #linkState{color:#e08a2c;font-weight:bold;margin-left:8px;}
@@ -335,7 +337,7 @@
       <input type="file" id="loadFile" accept=".json,application/json" style="display:none" onchange="loadFile(this)">
     </div>
     <div class="tgroup"><span class="tgroup-label">工程</span>
-      <button onclick="addTask()" title="項目の行を1行追加">＋ 工程を追加</button>
+      <button onclick="addTask()" title="項目行を1行追加（入力した項目名は適用項目にも登録されます）">＋ 項目行を追加</button>
     </div>
     <div class="tgroup"><span class="tgroup-label">書き込み</span>
       <button onclick="addAnnotation()" title="工程表の上に文字を自由に配置（ドラッグで移動、ダブルクリックで編集、「項目▼」で大項目→小項目のプルダウン選択）">📝 ＋ 注釈</button>
@@ -427,7 +429,7 @@
   <div>設計・監理：<span id="tDesigner"></span>　施工：<span id="tBuilder"></span>　作成者：<span id="tAuthor"></span>　承認者：<span id="tApprover"></span></div>
 </div>
 
-<p class="hint no-print" style="margin:0 0 6px;">💡 <b>工程線の左右のふち（カーソルが ↔ に変わる部分）をドラッグすると期間を伸縮でき、開始日・完了日も連動して変わります。</b>端のセルをクリック → 別項目の線の端をクリックで、端部同士を点線で接続します。点線をクリックして選択し「🗑 削除」（または Delete キー）で消せます。<b>工程線の中ほどをクリックすると文字を入力できます</b>（線の端でも Shift＋クリックで入力可）。入力した文字はドラッグで移動、クリックで色・太さ・サイズを変更できます。<b>工程表の上をダブルクリックすると注釈を挿入</b>できます（選択すると四隅の■ドラッグで拡大縮小、Ctrl＋C／Ctrl＋Vでコピー＆貼り付け）。<span id="linkState"></span></p>
+<p class="hint no-print" style="margin:0 0 6px;">💡 <b>工程線の左右のふち（カーソルが ↔ に変わる部分）をドラッグすると期間を伸縮でき、開始日・完了日も連動して変わります。</b>端のセルをクリック → 別項目の線の端をクリックで、端部同士を点線で接続します。点線をクリックして選択し「🗑 削除」（または Delete キー）で消せます。<b>工程線の中ほどをクリックすると文字を入力できます</b>（線の端でも Shift＋クリックで入力可）。入力した文字はドラッグで移動、クリックで色・太さ・サイズを変更できます。<b>工程表の上を右クリックすると注釈を挿入</b>できます（選択すると四隅の■ドラッグで拡大縮小、Ctrl＋C／Ctrl＋Vでコピー＆貼り付け、Deleteキーで削除）。<b>工程線を引くには、開始日付近をダブルクリック → ポイントが表示 → 終了日付近をクリック</b>（すでに線がある行では、ダブルクリックした側に近い端部を、次のクリック位置へ変更できます）。<span id="linkState"></span></p>
 <div id="scrollWrap"><table id="ganttTable"></table></div>
 <div class="notesblock" id="notesBlock">
   <div class="nb-label">注意事項<br>懸念事項<br>など</div>
@@ -812,6 +814,13 @@ function delTask(i){
   tasks.splice(i,1); render();
 }
 
+// 項目行に入力した項目名が未登録なら、適用項目（その他）に追加登録する
+function registerItemFromRow(v,t){
+  const n=String(v||'').trim(); if(!n||GROUP_OF[n]) return;
+  const checked=getAutoChecked(); checked.push(n);
+  customItems.push({g:'その他',n,c:(t&&t.color)||null});
+  rebuildMaster(); buildAutoChecks(); setAutoChecked(checked); scheduleSave();
+}
 function taskOptionNames(){ return ITEM_MASTER.flatMap(g=>g[1]); }
 
 // ===== 工種プルダウン（自作） =====
@@ -1348,6 +1357,7 @@ function render(){
     nameIn.placeholder='項目を選択 or 入力';
     nameIn.setAttribute('autocomplete','off');
     nameIn.oninput=(e)=>{tasks[ri].name=e.target.value; if(_tmInput===nameIn) openTaskMenu(nameIn,e.target.value);};
+    nameIn.addEventListener('change',()=>registerItemFromRow(nameIn.value,tasks[ri]));
     nameIn.addEventListener('focus',()=>openTaskMenu(nameIn,''));
     nameIn.addEventListener('click',()=>{ if(_tmInput!==nameIn) openTaskMenu(nameIn,''); });
     const ddBtn = document.createElement('button'); ddBtn.type='button'; ddBtn.className='ddbtn no-print'; ddBtn.textContent='▼'; ddBtn.title='項目の一覧から選ぶ';
@@ -1394,7 +1404,7 @@ function render(){
     const color = t.color || 'green';
     const rowTds = []; dayTds[ri] = rowTds;
     cols.forEach(d=>{
-      const td = document.createElement('td'); td.className='daycol barcell '+dowColorClass(d)+(eom(d)?' meom':'')+((d.getDate()===10||d.getDate()===20)?' vk':'');
+      const td = document.createElement('td'); td.className='daycol barcell '+dowColorClass(d)+(eom(d)?' meom':'')+(([10,20,30].includes(d.getDate()))?' vk':'');
       rowTds.push(td);
       if(t._ok && d>=t._s && d<=t._e){
         const contLeft = d>t._s, contRight = d<t._e;
@@ -1434,6 +1444,7 @@ function render(){
   const ls=document.getElementById('linkState'); if(ls) ls.textContent=_linkFrom?'▶ 接続元を選択中：もう一方の項目の線の端をクリック（Escで中止）':'';
   _cols = cols;
   renderAnnotations();
+  if(_pend) markPending();
   if(_restoreFocus){
     const sel = '[data-ri="'+_restoreFocus.ri+'"][data-field="'+_restoreFocus.field+'"]';
     const elToFocus = table.querySelector(sel);
@@ -1664,8 +1675,12 @@ document.addEventListener('pointerdown',e=>{
 });
 document.addEventListener('keydown',e=>{
   const ae=document.activeElement, typing=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'||ae.isContentEditable);
+  if(e.key==='Escape' && _pend){ cancelPending(); }
   if(e.key==='Escape' && _linkFrom){ _linkFrom=null; render(); }
   if((e.key==='Delete'||e.key==='Backspace') && _linkSel && !typing){ e.preventDefault(); deleteLink(_linkSel); }
+  else if((e.key==='Delete'||e.key==='Backspace') && _annoSel && !typing){
+    e.preventDefault(); annotations=annotations.filter(x=>x.id!==_annoSel); _annoSel=null; renderAnnotations(); scheduleSave();
+  }
 });
 
 // ===== 注意事項・現場状況（横書き） =====
@@ -1883,14 +1898,71 @@ document.addEventListener('input', scheduleSave);
 document.addEventListener('change', scheduleSave);
 window.addEventListener('beforeunload', ()=>{ clearTimeout(_saveTimer); saveNow(); });
 initDropZone();
+// 右クリックで注釈を挿入
+document.getElementById('ganttTable').addEventListener('contextmenu',e=>{
+  if(e.target.closest('.anno,.barlabel,.barlabel-edit,svg.lnk,.lnk-del,.bar-h,input,select,button')) return;
+  if(!e.target.closest('tbody td.daycol')) return;
+  e.preventDefault(); clearTimeout(_barClickTimer);
+  addAnnotationAt(e.clientX,e.clientY);
+});
+// 左ダブルクリックで工程線の「ポイント」を表示 → 次のクリックで工程線を作成／端部を変更
+let _pend=null;   // {id, mode:'new'|'start'|'end', iso}
+function _cellInfo(target){
+  const td=target.closest&&target.closest('tbody td.daycol'); if(!td) return null;
+  const tr=td.parentElement; const trs=Array.from(document.querySelectorAll('#ganttTable tr.taskrow'));
+  const ri=trs.indexOf(tr); if(ri<0) return null;
+  const ci=Array.from(tr.querySelectorAll('td.daycol')).indexOf(td); if(ci<0||!_cols[ci]) return null;
+  return {td,ri,ci,iso:toISO(_cols[ci])};
+}
+function _dd(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
+function markPending(){
+  document.querySelectorAll('td.pendcell').forEach(x=>x.classList.remove('pendcell'));
+  const ls=document.getElementById('linkState');
+  if(!_pend){ return; }
+  const ri=tasks.findIndex(t=>t.id===_pend.id); if(ri<0){ _pend=null; return; }
+  const tr=document.querySelectorAll('#ganttTable tr.taskrow')[ri];
+  const ci=_cols.findIndex(d=>toISO(d)===_pend.iso);
+  const td=tr&&ci>=0?tr.querySelectorAll('td.daycol')[ci]:null;
+  if(td) td.classList.add('pendcell');
+  if(ls) ls.textContent = _pend.mode==='new' ? '▶ 開始点を設定：終了日付近をクリックで工程線を作成（Escで中止）'
+    : _pend.mode==='start' ? '▶ 開始日を変更中：新しい開始日の位置をクリック（Escで中止）'
+    : '▶ 終了日を変更中：新しい終了日の位置をクリック（Escで中止）';
+}
+function cancelPending(){ _pend=null; document.querySelectorAll('td.pendcell').forEach(x=>x.classList.remove('pendcell')); const ls=document.getElementById('linkState'); if(ls&&!_linkFrom) ls.textContent=''; }
 document.getElementById('ganttTable').addEventListener('dblclick',e=>{
   if(e.button!==0) return;
   if(e.target.closest('.anno,.barlabel,.barlabel-edit,svg.lnk,.lnk-del,.bar-h,input,select,button')) return;
-  if(!e.target.closest('tbody td.daycol')) return;
+  const info=_cellInfo(e.target); if(!info) return;
   clearTimeout(_barClickTimer);
   const sl=getSelection(); if(sl) sl.removeAllRanges();
-  addAnnotationAt(e.clientX,e.clientY);
-});
+  const t=tasks[info.ri]; if(!t.id) t.id=newTaskId();
+  _linkFrom=null; _linkSel=null; document.querySelectorAll('td.linkpend').forEach(x=>x.classList.remove('linkpend'));
+  let mode='new';
+  if(t.start && t.end && t.end>=t.start){   // すでに線がある行：近いほうの端部を変更
+    mode = Math.abs(_dd(t.start,info.iso)) <= Math.abs(_dd(t.end,info.iso)) ? 'start' : 'end';
+  }
+  _pend={id:t.id,mode,iso:info.iso};
+  markPending();
+},true);
+// ポイント設定後の次のクリック：同じ行なら確定、それ以外なら中止
+document.getElementById('ganttTable').addEventListener('click',e=>{
+  if(!_pend) return;
+  if(e.detail>1) { e.stopPropagation(); return; }   // ダブルクリックの2回目は無視
+  const info=_cellInfo(e.target);
+  const ri=tasks.findIndex(t=>t.id===_pend.id);
+  if(!info||info.ri!==ri){ cancelPending(); return; }
+  e.stopPropagation(); e.preventDefault(); clearTimeout(_barClickTimer);
+  const t=tasks[ri], p=_pend; _pend=null;
+  if(p.mode==='new'){
+    let a=p.iso,b=info.iso; if(b<a){ const x=a; a=b; b=x; }
+    t.start=a; t.end=b;
+  } else if(p.mode==='start'){
+    if(info.iso>t.end){ t.start=t.end; t.end=info.iso; } else t.start=info.iso;
+  } else {
+    if(info.iso<t.start){ t.end=t.start; t.start=info.iso; } else t.end=info.iso;
+  }
+  render();
+},true);
 buildAutoChecks();
 loadSaved(); // 前回の状態があれば復元
 syncNotesUI();
